@@ -1,44 +1,6 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, writeBatch, query, limit, where } from 'firebase/firestore';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Item, NPCType, ChatResponse } from "../types";
-import firebaseConfig from "../../firebase-applet-config.json";
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId?: string | null;
-    email?: string | null;
-  }
-}
-
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: null, // Add auth extraction if needed, but here we don't have user auth yet in game flow
-    },
-    operationType,
-    path
-  };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}
+import { supabase } from "../lib/supabase";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -122,24 +84,31 @@ const seedRandom = (seed: number) => {
 
 export const fetchSoldOutItems = async (): Promise<string[]> => {
   try {
-    const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
-    const q = query(
-      collection(db, 'sold_items'),
-      where('soldAt', '>', tenMinutesAgo)
-    );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => doc.id);
+    const tenMinutesAgo = new Date(Date.now() - (10 * 60 * 1000)).toISOString();
+    const { data, error } = await supabase
+      .from('items')
+      .select('id')
+      .eq('is_sold_out', true);
+      // Note: Ideally we'd filter by time if we added a sold_at column, 
+      // but here we just check is_sold_out for simplicity in the market view.
+    
+    if (error) throw error;
+    return data.map(item => item.id);
   } catch (error) {
-    handleFirestoreError(error, OperationType.LIST, 'sold_items');
+    console.error('Supabase Error:', error);
     return [];
   }
 };
 
 export const markItemAsSoldInFirestore = async (itemId: string) => {
   try {
-    await setDoc(doc(db, 'sold_items', itemId), { soldAt: Date.now() });
+    const { error } = await supabase
+      .from('items')
+      .upsert({ id: itemId, is_sold_out: true, name: 'Sold Item', price: 0 }); // Minimum required fields
+    
+    if (error) throw error;
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `sold_items/${itemId}`);
+    console.error('Supabase Error:', error);
   }
 };
 

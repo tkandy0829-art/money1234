@@ -1,12 +1,4 @@
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  setDoc, 
-  getDocs, 
-  updateDoc 
-} from 'firebase/firestore';
-import { db } from './firebase';
+import { supabase } from './supabase';
 
 export interface UserRecord {
   id: string;
@@ -15,34 +7,51 @@ export interface UserRecord {
 }
 
 export const checkIdExists = async (id: string): Promise<boolean> => {
-  const docRef = doc(db, 'users', id);
-  const docSnap = await getDoc(docRef);
-  return docSnap.exists();
+  const { data, error } = await supabase
+    .from('users')
+    .select('id')
+    .eq('id', id)
+    .single();
+  
+  return !!data;
 };
 
 export const registerUser = async (user: UserRecord): Promise<void> => {
-  await setDoc(doc(db, 'users', user.id), user);
+  const { error } = await supabase
+    .from('users')
+    .insert([
+      { id: user.id, password: user.password, balance: user.balance }
+    ]);
+  
+  if (error) throw error;
 };
 
 export const loginUser = async (id: string, password: string): Promise<UserRecord | null> => {
-  const docRef = doc(db, 'users', id);
-  const docSnap = await getDoc(docRef);
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', id)
+    .eq('password', password)
+    .single();
   
-  if (docSnap.exists()) {
-    const data = docSnap.data() as UserRecord;
-    if (data.password === password) {
-      return data;
-    }
-  }
-  return null;
+  if (error || !data) return null;
+  return data as UserRecord;
 };
 
 export const getAllUsers = async (): Promise<UserRecord[]> => {
-  const querySnapshot = await getDocs(collection(db, 'users'));
-  return querySnapshot.docs.map(doc => doc.data() as UserRecord);
+  const { data, error } = await supabase
+    .from('users')
+    .select('*');
+  
+  if (error) return [];
+  return data as UserRecord[];
 };
 
 export const updateUserBalanceInFirestore = async (userId: string, newBalance: number): Promise<void> => {
-  const docRef = doc(db, 'users', userId);
-  await updateDoc(docRef, { balance: newBalance });
+  const { error } = await supabase
+    .from('users')
+    .update({ balance: newBalance })
+    .eq('id', userId);
+  
+  if (error) throw error;
 };
