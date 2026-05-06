@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "Item": {
+      "title": "Item",
+      "description": "A marketplace item for trade",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "description": { "type": "string" },
+        "category": { "type": "string", "enum": ["ELECTRONICS", "FURNITURE", "CLOTHING", "FOOD", "BOOKS", "ART", "CAR", "REAL_ESTATE", "OTHER"] },
+        "condition": { "type": "string", "enum": ["NEW", "LIKE_NEW", "USED", "HEAVILY_USED"] },
+        "isDecayed": { "type": "boolean" },
+        "createdAt": { "type": "number" },
+        "sellerId": { "type": "string" },
+        "isSoldOut": { "type": "boolean" }
+      },
+      "required": ["id", "name", "price", "category", "condition", "isSoldOut"]
+    },
+    "User": {
+      "title": "User",
+      "description": "App user account",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "password": { "type": "string" },
+        "balance": { "type": "number" },
+        "isAdmin": { "type": "boolean" }
+      },
+      "required": ["id", "password", "balance"]
+    }
+  },
+  "firestore": {
+    "/items/{itemId}": {
+      "schema": "Item",
+      "description": "Global marketplace items"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User accounts and balances"
+    }
+  }
+}

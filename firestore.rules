@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    function isSignedIn() { return true; } // Simplified for this ID-based custom system
+
+    function isValidItem(data) {
+      return data.keys().hasAll(['id', 'name', 'price', 'category', 'condition', 'isSoldOut'])
+        && data.name is string && data.name.size() <= 100
+        && data.price is number
+        && data.isSoldOut is bool;
+    }
+
+    match /items/{itemId} {
+      allow read: if true;
+      allow create, update: if true;
+    }
+
+    match /sold_items/{itemId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /users/{userId} {
+      allow create: if true; // Signup
+      allow read, update: if true; // Read for login/check, update for trades/admin
+      // In a real app, only allow self or admin. For this sim, we keep it open for custom ID system.
+    }
+  }
+}

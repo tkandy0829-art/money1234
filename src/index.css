@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #FF8A3D;
+  --color-bg-gray: #F2F3F7;
+  --color-text-dark: #212124;
+  --color-status-up: #ff3b30;
+  --color-status-down: #007aff;
+}
+
+@layer base {
+  body {
+    @apply bg-[#1a1a1a] text-text-dark antialiased;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+}
+
+@layer components {
+  .phone-frame {
+    @apply bg-white rounded-[40px] border-[12px] border-[#2a2a2a] relative flex flex-col overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)];
+  }
+
+  .section-label {
+    @apply text-[11px] font-bold text-[#888] uppercase mb-2 mt-4;
+  }
+
+  .card {
+    @apply bg-white rounded-xl p-3 mb-2 shadow-[0_2px_4px_rgba(0,0,0,0.05)];
+  }
+
+  .messenger-bubble-user {
+    @apply bg-brand text-white rounded-[18px] rounded-br-[2px] px-[14px] py-[10px] max-w-[85%] self-end text-[13px] leading-relaxed shadow-sm;
+  }
+  
+  .messenger-bubble-npc {
+    @apply bg-[#e9e9eb] text-text-dark rounded-[18px] rounded-bl-[2px] px-[14px] py-[10px] max-w-[85%] self-start text-[13px] leading-relaxed shadow-sm;
+  }
+
+  .stock-item {
+    @apply text-center p-2 rounded-lg bg-[#f9f9f9] border border-gray-50;
+  }
+
+  .admin-panel-retro {
+    @apply absolute top-20 -right-5 w-40 bg-[#222] rounded-xl p-3 transform rotate-[-2deg] shadow-2xl opacity-90 z-50;
+    font-family: monospace;
+    font-size: 10px;
+    color: #0f0;
+  }
+
+  .bottom-nav-item {
+    @apply flex flex-col items-center justify-center flex-1 py-1 text-gray-400 hover:text-brand transition-colors cursor-pointer;
+  }
+  .bottom-nav-item.active {
+    @apply text-brand font-bold;
+  }
+}
